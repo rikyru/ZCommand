@@ -3,35 +3,21 @@
  *
  * SPDX-License-Identifier: CC0-1.0
  *
- * Zigbee HA_on_off_light Example
- *
- * This example code is in the Public Domain (or CC0 licensed, at your option.)
- *
- * Unless required by applicable law or agreed to in writing, this
- * software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
- * CONDITIONS OF ANY KIND, either express or implied.
+ * Zigbee relay control device
  */
 
 #include "esp_zigbee_core.h"
-#include "light_driver.h"
 
 /* Zigbee configuration */
-#define INSTALLCODE_POLICY_ENABLE       false   /* enable the install code policy for security */
+#define INSTALLCODE_POLICY_ENABLE       false
 #define ED_AGING_TIMEOUT                ESP_ZB_ED_AGING_TIMEOUT_64MIN
 #define ED_KEEP_ALIVE                   3000    /* 3000 millisecond */
-#define HA_ESP_LIGHT_ENDPOINT           10      /* esp light bulb device endpoint, used to process light controlling commands */
-#define ESP_ZB_PRIMARY_CHANNEL_MASK     ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK  /* Zigbee primary channel mask use in the example */
+#define HA_ESP_LIGHT_ENDPOINT           10
+#define ESP_ZB_PRIMARY_CHANNEL_MASK     ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK
 
-// GPIO configuration
-#define BUTTON_GPIO      9
-#define BLUE_LED_GPIO    7
-#define RGB_LED_EN_GPIO  19
-#define RGB_LED_DATA_GPIO 20
-
-#define LED_RGB_COLOR_RED    {255, 0, 0}  // Non paired
-#define LED_RGB_COLOR_BLUE   {0, 0, 255}  // Pairing
-#define LED_RGB_COLOR_GREEN  {0, 255, 0}  // Paired
-
+/* GPIO configuration */
+#define RELAY_GPIO      1
+#define BUTTON_GPIO     22
 
 #define ESP_ZB_ZED_CONFIG()                                         \
     {                                                               \

@@ -4,7 +4,7 @@
     "idf.openOcdConfigs": [
         "board/esp32c6-builtin.cfg"
     ],
-    "idf.portWin": "COM8",
+    "idf.portWin": "COM16",
     "idf.toolsPathWin": "c:\\Compiler\\.esp",
     "files.associations": {
         "light_driver.h": "c",
@@ -16,5 +16,6 @@
         "span": "c"
     },
     "idf.flashType": "UART",
-    "idf.pythonInstallPath": "c:\\Compiler\\.esp\\tools\\idf-python\\3.11.2\\python.exe"
+    "idf.pythonInstallPath": "c:\\Compiler\\.esp\\tools\\idf-python\\3.11.2\\python.exe",
+    "idf.currentSetup": "c:\\Compiler\\Espressif\\frameworks\\v5.4.1\\esp-idf"
 }
