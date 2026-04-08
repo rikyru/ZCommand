@@ -17,5 +17,6 @@
     },
     "idf.flashType": "UART",
     "idf.pythonInstallPath": "c:\\Compiler\\.esp\\tools\\idf-python\\3.11.2\\python.exe",
-    "idf.currentSetup": "c:\\Compiler\\Espressif\\frameworks\\v5.4.1\\esp-idf"
+    "idf.currentSetup": "/Users/riccardo/esp/.espressif/v5.5.2/esp-idf",
+    "idf.port": "/dev/tty.usbmodem1101"
 }

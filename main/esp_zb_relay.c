@@ -92,9 +92,8 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
                 steering_start_time = esp_timer_get_time();
                 esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
             } else {
-                ESP_LOGI(TAG, "Device rebooted, rejoining network via stored credentials...");
-                /* Lo stack Zigbee gestisce il rejoin automaticamente.
-                   Il device si associa al router più vicino della sua rete. */
+                ESP_LOGI(TAG, "Device rebooted, rejoining network...");
+                esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
             }
         } else {
             ESP_LOGW(TAG, "Failed to initialize Zigbee stack (status: %s), clearing ZB storage and rebooting...", esp_err_to_name(err_status));
@@ -150,7 +149,7 @@ static void esp_zb_task(void *pvParameters)
 {
     ESP_LOGI(TAG, "Initializing Zigbee stack...");
 
-    esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZED_CONFIG();
+    esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZR_CONFIG();
     esp_zb_init(&zb_nwk_cfg);
 
     uint8_t zcl_version = 3;
@@ -164,14 +163,17 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, &model_id[0]);
     esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, &manufacturer_name[0]);
 
+    uint16_t identify_time = 0;
+    uint8_t name_support = 0;
+
     esp_zb_attribute_list_t *esp_zb_identify_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_IDENTIFY);
-    esp_zb_identify_cluster_add_attr(esp_zb_identify_cluster, ESP_ZB_ZCL_ATTR_IDENTIFY_IDENTIFY_TIME_ID, &test_attr);
+    esp_zb_identify_cluster_add_attr(esp_zb_identify_cluster, ESP_ZB_ZCL_ATTR_IDENTIFY_IDENTIFY_TIME_ID, &identify_time);
 
     esp_zb_attribute_list_t *esp_zb_groups_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_GROUPS);
-    esp_zb_groups_cluster_add_attr(esp_zb_groups_cluster, ESP_ZB_ZCL_ATTR_GROUPS_NAME_SUPPORT_ID, &test_attr);
+    esp_zb_groups_cluster_add_attr(esp_zb_groups_cluster, ESP_ZB_ZCL_ATTR_GROUPS_NAME_SUPPORT_ID, &name_support);
 
     esp_zb_attribute_list_t *esp_zb_scenes_cluster = esp_zb_scenes_cluster_create(NULL);
-    esp_zb_cluster_update_attr(esp_zb_scenes_cluster, ESP_ZB_ZCL_ATTR_SCENES_NAME_SUPPORT_ID, &test_attr);
+    esp_zb_cluster_update_attr(esp_zb_scenes_cluster, ESP_ZB_ZCL_ATTR_SCENES_NAME_SUPPORT_ID, &name_support);
 
     esp_zb_on_off_cluster_cfg_t on_off_cfg;
     on_off_cfg.on_off = ESP_ZB_ZCL_ON_OFF_ON_OFF_DEFAULT_VALUE;
