@@ -20,7 +20,10 @@ static int64_t steering_start_time = 0;
 /********************* Define functions **************************/
 static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask)
 {
-    ESP_ERROR_CHECK(esp_zb_bdb_start_top_level_commissioning(mode_mask));
+    esp_err_t err = esp_zb_bdb_start_top_level_commissioning(mode_mask);
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "bdb_start_top_level_commissioning failed: %s", esp_err_to_name(err));
+    }
 }
 
 static void configure_gpio()
@@ -84,10 +87,15 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
     case ESP_ZB_BDB_SIGNAL_DEVICE_FIRST_START:
     case ESP_ZB_BDB_SIGNAL_DEVICE_REBOOT:
         if (err_status == ESP_OK) {
-            ESP_LOGI(TAG, "Device started up in %s factory-reset mode", esp_zb_bdb_is_factory_new() ? "" : "non-");
-            ESP_LOGI(TAG, "Not joined to a network, starting network steering (60s timeout)...");
-            steering_start_time = esp_timer_get_time();
-            esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
+            if (esp_zb_bdb_is_factory_new()) {
+                ESP_LOGI(TAG, "Factory new device, starting network steering (60s timeout)...");
+                steering_start_time = esp_timer_get_time();
+                esp_zb_bdb_start_top_level_commissioning(ESP_ZB_BDB_MODE_NETWORK_STEERING);
+            } else {
+                ESP_LOGI(TAG, "Device rebooted, rejoining network via stored credentials...");
+                /* Lo stack Zigbee gestisce il rejoin automaticamente.
+                   Il device si associa al router più vicino della sua rete. */
+            }
         } else {
             ESP_LOGW(TAG, "Failed to initialize Zigbee stack (status: %s), clearing ZB storage and rebooting...", esp_err_to_name(err_status));
             esp_zb_factory_reset();
@@ -145,15 +153,14 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_cfg_t zb_nwk_cfg = ESP_ZB_ZED_CONFIG();
     esp_zb_init(&zb_nwk_cfg);
 
-    uint8_t test_attr = 0;
-    uint8_t test_attr2 = 4;
+    uint8_t zcl_version = 3;
+    uint8_t power_source = 1;  /* 1 = mains (single phase) */
     static uint8_t manufacturer_name[33] = {6, 'r', 'i', 'k', 'y', 'r', 'u'};
-    static uint8_t model_id[33] = {12, 'E', 'S', 'P', '3', '2', '-', 'C', '6', '_', 'r', 'e', 'l', 'a', 'y'};
+    static uint8_t model_id[33] = {14, 'E', 'S', 'P', '3', '2', '-', 'C', '6', '_', 'r', 'e', 'l', 'a', 'y'};
 
     esp_zb_attribute_list_t *esp_zb_basic_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_BASIC);
-    esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_ZCL_VERSION_ID, &test_attr);
-    esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_POWER_SOURCE_ID, &test_attr2);
-    esp_zb_cluster_update_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_ZCL_VERSION_ID, &test_attr2);
+    esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_ZCL_VERSION_ID, &zcl_version);
+    esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_POWER_SOURCE_ID, &power_source);
     esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, &model_id[0]);
     esp_zb_basic_cluster_add_attr(esp_zb_basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, &manufacturer_name[0]);
 
